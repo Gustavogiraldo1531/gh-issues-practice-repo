@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple
 
-def calcular_factura(items: List[Dict], iva: float = 0.19, descuento: float = 0.0, incluye_iva_en_precios: bool = False) -> Tuple[float, float, float]:
+def calcular_factura(items: List[Dict], iva: float = 0.19, descuento: float = 0.1, incluye_iva_en_precios: bool = False) -> Tuple[float, float, float]:
     """
     Calcula subtotal, iva y total.
     items: lista de dicts con keys: nombre, precio, cantidad
