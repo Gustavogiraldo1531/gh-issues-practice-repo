@@ -15,12 +15,12 @@ def calcular_factura(items: List[Dict], iva: float = 0.19, descuento: float = 0.
         subtotal += precio * cantidad
 
     if incluye_iva_en_precios:
-        base = subtotal
+        base = subtotal * (1 - descuento) # quitar descuento antes de calcular IVA
         iva_calc = base * (iva / (1 + iva))  # aproximacion
     else:
-        base = subtotal
+        base = subtotal * (1 - descuento) # quitar descuento antes de calcular IVA
         iva_calc = base * iva
 
     total_bruto = base + iva_calc
-    total_desc = total_bruto * (1 - descuento)
+    total_desc = subtotal * descuento # Valor del descuento aplicado
     return round(subtotal, 2), round(iva_calc, 2), round(total_desc, 2)
