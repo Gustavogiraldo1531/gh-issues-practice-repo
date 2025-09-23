@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple
+from decimal import Decimal, ROUND_HALF_UP
 
 def calcular_factura(items: List[Dict], iva: float = 0.19, descuento: float = 0.1, incluye_iva_en_precios: bool = False) -> Tuple[float, float, float]:
     """
@@ -8,19 +9,33 @@ def calcular_factura(items: List[Dict], iva: float = 0.19, descuento: float = 0.
     descuento: 0.10 = 10%
     incluye_iva_en_precios: si True, los precios ya incluyen IVA
     """
-    subtotal = 0.0
+    subtotal = Decimal("0.00")
     for it in items:
-        precio = float(it.get("precio", 0))
+        precio = Decimal(str(it.get("precio", 0)))
         cantidad = int(it.get("cantidad", 0))
+        #Validación de entradas
+        if precio < 0:
+            raise ValueError(f"Precio negativo no permitido: {precio}")
+        if cantidad < 0:
+            raise ValueError(f"Cantidad negativa no permitida: {cantidad}")
         subtotal += precio * cantidad
 
+    iva = Decimal(str(iva))
+    descuento = Decimal(str(descuento))
+
     if incluye_iva_en_precios:
-        base = subtotal * (1 - descuento) # quitar descuento antes de calcular IVA
-        iva_calc = base * (iva / (1 + iva))  # aproximacion
+        base = (subtotal / (Decimal("1.0") + iva)) * (Decimal("1.0") - descuento)  # quitar descuento antes de calcular IVA
+        iva_calc = base * iva  # calculo correcto de iva si precio incluye iva
+        valor_descuento = base * descuento
     else:
-        base = subtotal * (1 - descuento) # quitar descuento antes de calcular IVA
+        base = subtotal * (Decimal("1.0") - descuento) # quitar descuento antes de calcular IVA
         iva_calc = base * iva
+        valor_descuento = base * descuento # se agrega valor del descuento
 
     total_bruto = base + iva_calc
-    total_desc = subtotal * descuento # Valor del descuento aplicado
-    return round(subtotal, 2), round(iva_calc, 2), round(total_desc, 2)
+
+    # --- Redondeo contable (2 decimales, hacia arriba al 0.5) ---
+    def r(x: Decimal) -> Decimal:
+        return x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    return r(subtotal), r(iva_calc), r(valor_descuento)
