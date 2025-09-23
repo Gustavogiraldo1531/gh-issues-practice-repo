@@ -50,5 +50,6 @@ def clasificar_antiguedad(
             buckets["61-90"] += saldo
         else:
             buckets["91+"] += saldo
-        
+            
+    return {k: float(v.quantize(TWO, rounding=ROUND_HALF_UP)) for k,v in buckets.items()}
 
