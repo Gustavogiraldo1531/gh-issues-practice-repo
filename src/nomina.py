@@ -1,22 +1,40 @@
 from typing import Dict
+from decimal import Decimal, ROUND_HALF_UP
 
-def calcular_nomina(basico_mensual: float, horas_mes: int, horas_extra: int, recargo_noche: bool = False) -> Dict[str, float]:
+TWO = Decimal('0.01')
+def _to_dec(x) -> Decimal:
+    return Decimal(str(x))
+
+def calcular_nomina(basico_mensual: float, 
+                    horas_mes: int, 
+                    horas_extra: int, 
+                    horas_noche: int = 0) -> Dict[str, float]:
     """
-    basico_mensual: salario base del mes
-    horas_mes: horas ordinarias del mes (ej. 240)
-    horas_extra: cantidad de horas extra
-    recargo_noche: aplica recargo nocturno simple
-    Retorna dict con 'basico', 'extras', 'recargos', 'total'
-    """
+    Calcula la nomina basica con horas extras y recargos nocturnos.
+    - basico_mensual >= 0.
+    - horas_mes > 0 (valor por defecto 240 si es 0 o negativo).  
+    - horas_extra >= 0.
+    - horas_noche >= 0.
+    Retorna un diccionario con: basico, extras, recargos, total. 
+    """ 
+    if basico_mensual < 0:
+        raise ValueError("El basico mensual debe ser mayor o igual a 0.")
     if horas_mes <= 0:
-        horas_mes = 240  # valor por defecto
-    valor_hora = basico_mensual / horas_mes
-    extras = horas_extra * valor_hora * 1.5
-    recargos = valor_hora * 0.35 if recargo_noche else 0.0
-    total = basico_mensual + extras + recargos
+        raise ValueError("Las horas del mes deben ser mayores a 0.")
+    if horas_extra < 0 or horas_noche < 0:
+        raise ValueError("Las horas extras y nocturnas deben ser mayores o iguales a 0.")
+    B = _to_dec(basico_mensual)
+    HM = _to_dec(horas_mes)
+    HE = _to_dec(horas_extra)
+    HN = _to_dec(horas_noche)
+
+    valor_hora = (B / HM)
+    extras = (valor_hora * HE * Decimal('1.5'))
+    recargos = (valor_hora * HN * Decimal('0.35'))
+    total = B + extras + recargos
+
     return {
-        "basico": round(basico_mensual, 2),
-        "extras": round(extras, 2),
-        "recargos": round(recargos, 2),
-        "total": round(total, 2),
-    }
+        'basico': float(B.quantize(TWO, rounding=ROUND_HALF_UP)),
+        'extras': float(extras.quantize(TWO, rounding=ROUND_HALF_UP)),
+        'recargos': float(recargos.quantize(TWO, rounding=ROUND_HALF_UP)),
+        'total': float(total.quantize(TWO, rounding=ROUND_HALF_UP))}
